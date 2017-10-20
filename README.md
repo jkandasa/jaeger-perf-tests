@@ -1,19 +1,12 @@
-## Simple standalone example of writing spans to Jaeger
+# Jaeger performance tests
 
-# Start Cassandra and create the keyspace
-+ `docker run --name=cassandra --rm -it -p 7000:7000 -p 9042:9042 cassandra:3.9`
-+ `MODE=test ./plugin/storage/cassandra/schema/create.sh | cqlsh `
+This repository contains simple code which emits spans to jaeger services. 
+It can be used to test performance of your Jaeger deployment.
 
-# Start the Collector and Agent
-+ `export CASSANDRA_KEYSPACE_NAME=jaeger_v1_test`
-+ `export CASSANDRA_CLUSTER_IP=<ctual ip of cassandra is running on, not localhost`
-+ `docker run -it -e CASSANDRA_SERVERS=192.168.0.118 -e CASSANDRA_KEYSPACE=${CASSANDRA_KEYSPACE_NAME} --rm -p14267:14267 -p14268:14268 jaegertracing/jaeger-collector:latest` 
-+ `docker run -it -e PROCESSOR_JAEGER_BINARY_SERVER_QUEUE_SIZE=100000 -e PROCESSOR_JAEGER_COMPACT_SERVER_QUEUE_SIZE=100000 -e COLLECTOR_HOST_PORT=${CASSANDRA_CLUSTER_IP}:14267 -p5775:5775/udp -p6831:6831/udp -p6832:6832/udp -p5778:5778/tcp jaegertracing/jaeger-agent:latest`
-# Optional: Start the UI
-+ `docker run -it -e CASSANDRA_SERVERS=${CASSANDRA_CLUSTER_IP} -e CASSANDRA_KEYSPACE=${CASSANDRA_KEYSPACE_NAME} -p16686:16686  jaegertracing/jaeger-query:latest`
-`
-Some flags can affect performance of Jaeger services. If we know expected number of spans
-we should appropriately adjust queue sizes on agent and collector services:
+To deploy Jaeger services follow official documentation or: https://gist.github.com/pavolloffay/20cc357b1c951e15fdd046deb5eb64d2
+
+Note that some flags can affect performance of Jaeger services. If you know expected number of spans
+queue sizes on agent and collector services should be adjusted accordingly:
 
 Agent: `--processor.jaeger-compact.server-queue-size=N`
 Collector: `--collector.queue-size=300000`
@@ -33,9 +26,9 @@ echo "truncate jaeger_v1_test.traces;" | ccm node1 cqlsh
 
 After the deletion verify that number of stored spans is zero.
 
-### Just get a count of traces in Cassandra
+### Get a count of spans in Cassandra
 ```bash
-mvn clean -Dtest=SimpleTest#countTraces test
+mvn clean TODO
 ```
 
 or 
