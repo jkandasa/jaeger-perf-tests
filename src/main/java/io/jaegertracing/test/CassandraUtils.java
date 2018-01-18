@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class CassandraUtils {
   private static final Logger log = LoggerFactory.getLogger(CassandraUtils.class);
 
-  private Session session;
+  private final Session session;
 
   public CassandraUtils(String contactPoint, String keyspace) {
     this.session = getCassandraSession(contactPoint, keyspace);
@@ -31,7 +31,7 @@ public class CassandraUtils {
     return result.all().size();
   }
 
-  public int countTracesUntilNoChange() {
+  public int countSpansUntilNoChange() {
     int spansCount = 0;
     boolean change = true;
     while (change) {

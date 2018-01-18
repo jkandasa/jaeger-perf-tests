@@ -14,9 +14,12 @@ import com.uber.jaeger.samplers.ConstSampler;
 import com.uber.jaeger.senders.HttpSender;
 import com.uber.jaeger.senders.Sender;
 import com.uber.jaeger.senders.UdpSender;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,20 +64,27 @@ public class Main {
 
     long startTime = System.currentTimeMillis();
     ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+    List<Future<?>> futures = new ArrayList<>(THREAD_COUNT);
     for (int i = 0; i < THREAD_COUNT; i++) {
       Runnable worker = new CreateSpansRunnable(tracer, "Thread " + i, ITERATIONS, DELAY);
-      executor.execute(worker);
+      futures.add(executor.submit(worker));
+    }
+    for (Future<?> future: futures) {
+      future.get();
     }
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.MINUTES);
+    executor.awaitTermination(1, TimeUnit.SECONDS);
 
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
     logger.info("Finished all " + THREAD_COUNT + " threads; Created " + THREAD_COUNT * ITERATIONS + " spans" + " in " + duration/1000 + " seconds") ;
-    int spansCount = new CassandraUtils(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME).countTracesUntilNoChange();
+    startTime = System.currentTimeMillis();
+//    int spansCount = new CassandraUtils("localhost", "jaeger_v1_test").countSpansUntilNoChange();
+    int spansCount = new ElasticsearchUtils("localhost", 9200).countSpansUntilNoChange();
+    duration = System.currentTimeMillis() - startTime;
     final int expectedTraceCount = THREAD_COUNT * ITERATIONS;
-    logger.info("Expected number of spans {}, actual {}", expectedTraceCount, spansCount);
-    assertEquals("Did not find expected number of traces", expectedTraceCount, spansCount);
+    logger.info("Expected number of spans {}, actual {} stored in {} ms", expectedTraceCount, spansCount, duration);
+    tracer.close();
   }
 
   public static Tracer createJaegerTracer() {

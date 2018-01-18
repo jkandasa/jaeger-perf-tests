@@ -10,14 +10,13 @@
 
     <properties>
         <cassandra.driver.core.version>3.3.0</cassandra.driver.core.version>
-        <jaeger.version>0.22.0-RC1</jaeger.version>
+        <elasticsearch.version>6.1.1</elasticsearch.version>
+        <jaeger.version>0.23.1-SNAPSHOT</jaeger.version>
         <junit.version>4.12</junit.version>
         <maven.compiler.plugin.version>3.7.0</maven.compiler.plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-
-
 
     <dependencies>
         <dependency>
@@ -34,6 +33,16 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>${elasticsearch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.3</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
