@@ -1,8 +1,11 @@
 package io.jaegertracing.test;
 
+import static org.awaitility.Awaitility.await;
+
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +13,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Pavol Loffay
  */
-public class CassandraUtils {
+public class CassandraUtils extends UntilNoChangeCounter {
   private static final Logger log = LoggerFactory.getLogger(CassandraUtils.class);
 
   private final Session session;
@@ -26,26 +29,23 @@ public class CassandraUtils {
     return cluster.connect(keyspace);
   }
 
-  public int countTracesInCassandra() {
+  public int count() {
     ResultSet result = session.execute("select * from traces");
-    return result.all().size();
+    int spansCount = result.all().size();
+    log.info("found {} traces in Cassandra", spansCount);
+    return spansCount;
   }
 
-  public int countSpansUntilNoChange() {
-    int spansCount = 0;
-    boolean change = true;
-    while (change) {
-      int previous = spansCount;
-      spansCount = countTracesInCassandra();
-      log.info("found {} traces in Cassandra", spansCount);
-      change = spansCount != previous;
-      try {
-        TimeUnit.MILLISECONDS.sleep(500);
-      } catch (InterruptedException e) {
-        log.error("Could not sleep between getting data from cassandra", e);
-        e.printStackTrace();
-      }
-    }
-    return spansCount;
+  public int countUntilNoChange(final int expected) {
+    await().atMost(5, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
+      int spansCount = count();
+      return expected <= spansCount;
+    });
+    return count();
+  }
+
+  @Override
+  public void close() throws IOException {
+    session.close();
   }
 }

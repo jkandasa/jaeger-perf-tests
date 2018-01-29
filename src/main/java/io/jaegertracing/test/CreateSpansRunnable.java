@@ -14,24 +14,30 @@ public class CreateSpansRunnable implements Runnable {
   private String id;
   private int count;
   private int delay;
+  private boolean close;
 
-  public CreateSpansRunnable(Tracer tracer, String id, int count, int delay) {
+  public CreateSpansRunnable(Tracer tracer, String id, int count, int delay, boolean close) {
     this.tracer = tracer;
     this.id = id;
     this.count = count;
     this.delay = delay;
+    this.close = close;
   }
 
   @Override
   public void run() {
     log.debug("Starting " + id);
     for (int i = 0; i < count; i++) {
-      tracer.buildSpan(id).startManual().finish();
+      tracer.buildSpan(id).start().finish();
       try {
         TimeUnit.MILLISECONDS.sleep(delay);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
+    }
+
+    if (close) {
+      tracer.close();
     }
   }
 

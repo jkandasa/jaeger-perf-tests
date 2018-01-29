@@ -11,12 +11,12 @@ queue sizes on agent and collector services should be adjusted accordingly:
 Agent: `--processor.jaeger-compact.server-queue-size=N`
 Collector: `--collector.queue-size=300000`
 
-# Run tests
+## Run tests
 
 Create 300.000 spans
 
 ```bash
-THREAD_COUNT=100 ITERATIONS=3000 JAEGER_MAX_QUEUE_SIZE=100000 USE_AGENT_OR_COLLECTOR=collector mvn exec:java
+THREAD_COUNT=100 ITERATIONS=3000 mvn exec:java
 ```
 
 ### Remove spans from Cassandra
@@ -37,11 +37,18 @@ or
 echo "SELECT COUNT(*) FROM jaeger_v1_test.traces;" | ccm node1 cqlsh
 ```
 
-# Run on Kubernetes 
+## Run on Kubernetes 
 ```bash
-eval $(minishift docker-env)
+eval $(minikube docker-env)
 mvn package -DskipTests=true  && docker build -t jaeger-perf-tests:latest .
+# cassandra
 kubectl run perf-tests --env CASSANDRA_CLUSTER_IP=cassandra --env CASSANDRA_KEYSPACE_NAME=jaeger_v1_dc1 --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
+# elasticsearch
+kubectl run perf-tests --env ELASTIC_HOSTNAME=my-release-elasticsearch-client --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
+
+
+kubectl logs -f  po/perf-tests
+kubectl delete po/perf-tests
 ```
 
 ### Troubleshooting
