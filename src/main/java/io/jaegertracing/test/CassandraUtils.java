@@ -6,7 +6,6 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +33,6 @@ public class CassandraUtils extends UntilNoChangeCounter {
     int spansCount = result.all().size();
     log.info("found {} traces in Cassandra", spansCount);
     return spansCount;
-  }
-
-  public int countUntilNoChange(final int expected) {
-    await().atMost(5, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).until(() -> {
-      int spansCount = count();
-      return expected <= spansCount;
-    });
-    return count();
   }
 
   @Override

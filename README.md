@@ -42,7 +42,7 @@ echo "SELECT COUNT(*) FROM jaeger_v1_test.traces;" | ccm node1 cqlsh
 eval $(minikube docker-env)
 mvn package -DskipTests=true  && docker build -t jaeger-perf-tests:latest .
 # cassandra
-kubectl run perf-tests --env CASSANDRA_CLUSTER_IP=cassandra --env CASSANDRA_KEYSPACE_NAME=jaeger_v1_dc1 --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
+kubectl run perf-tests --env STORAGE=cassandra --env CASSANDRA_CLUSTER_IP=cassandra --env CASSANDRA_KEYSPACE_NAME=jaeger_v1_dc1 --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
 # elasticsearch
 kubectl run perf-tests --env ELASTIC_HOSTNAME=my-release-elasticsearch-client --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
 
