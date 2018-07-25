@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Pavol Loffay
  */
-public class CassandraUtils extends UntilNoChangeCounter {
-  private static final Logger log = LoggerFactory.getLogger(CassandraUtils.class);
+public class CassandraSpanCounter extends UntilNoChangeCounter {
+  private static final Logger log = LoggerFactory.getLogger(CassandraSpanCounter.class);
 
   private final Session session;
 
-  public CassandraUtils(String contactPoint, String keyspace) {
+  public CassandraSpanCounter(String contactPoint, String keyspace) {
     this.session = getCassandraSession(contactPoint, keyspace);
   }
 

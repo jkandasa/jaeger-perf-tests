@@ -47,11 +47,11 @@ public class Main {
 
   Main() {
     if ("elasticsearch".equals(STORAGE)) {
-      spanCounter = new ElasticsearchUtils(ELASTIC_HOSTNAME, 9200);
+      spanCounter = new ElasticsearchSpanCounter(ELASTIC_HOSTNAME, 9200);
     } else if ("jaeger-query".equals(STORAGE)) {
       spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, "PerfTest", THREAD_COUNT*ITERATIONS);
     } else {
-      spanCounter = new CassandraUtils(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME);
+      spanCounter = new CassandraSpanCounter(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME);
     }
     expectedSpansCount = ITERATIONS * THREAD_COUNT;
   }

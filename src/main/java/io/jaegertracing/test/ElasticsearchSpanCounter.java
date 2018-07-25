@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Pavol Loffay
  */
-public class ElasticsearchUtils extends UntilNoChangeCounter {
-  private static final Logger log = LoggerFactory.getLogger(ElasticsearchUtils.class);
+public class ElasticsearchSpanCounter extends UntilNoChangeCounter {
+  private static final Logger log = LoggerFactory.getLogger(ElasticsearchSpanCounter.class);
 
   private final String host;
   private final int port;
@@ -26,7 +26,7 @@ public class ElasticsearchUtils extends UntilNoChangeCounter {
   private final RestClient restClient;
   private final ObjectMapper objectMapper;
 
-  public ElasticsearchUtils(String host, int port) {
+  public ElasticsearchSpanCounter(String host, int port) {
     this.host = host;
     this.port = port;
     this.restClient = getESRestClient();
