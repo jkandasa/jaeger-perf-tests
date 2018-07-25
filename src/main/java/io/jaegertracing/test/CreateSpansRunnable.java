@@ -1,6 +1,10 @@
 package io.jaegertracing.test;
 
-import com.uber.jaeger.Tracer;
+import io.jaegertracing.internal.JaegerTracer;
+import io.opentracing.Span;
+import io.opentracing.tag.Tags;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,15 +14,15 @@ import org.slf4j.LoggerFactory;
  */
 public class CreateSpansRunnable implements Runnable {
   private static final Logger log = LoggerFactory.getLogger(CreateSpansRunnable.class);
-  private Tracer tracer;
-  private String id;
+  private JaegerTracer tracer;
+  private String name;
   private int count;
   private int delay;
   private boolean close;
 
-  public CreateSpansRunnable(Tracer tracer, String id, int count, int delay, boolean close) {
+  public CreateSpansRunnable(JaegerTracer tracer, String name, int count, int delay, boolean close) {
     this.tracer = tracer;
-    this.id = id;
+    this.name = name;
     this.count = count;
     this.delay = delay;
     this.close = close;
@@ -26,9 +30,22 @@ public class CreateSpansRunnable implements Runnable {
 
   @Override
   public void run() {
-    log.debug("Starting " + id);
+    log.debug("Starting " + name);
+    Map<String, Object> logs = new HashMap<>();
+    logs.put("event", Tags.ERROR);
+    logs.put("error.object", new RuntimeException());
+    logs.put("class", this.getClass().getName());
     for (int i = 0; i < count; i++) {
-      tracer.buildSpan(id).start().finish();
+      // emulate client spans
+      Span span = tracer.buildSpan(String.format("thread: %s, iteration: %d", name, i))
+          .withTag(Tags.COMPONENT.getKey(), "perf-test")
+          .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+          .withTag(Tags.HTTP_METHOD.getKey(), "get")
+          .withTag(Tags.HTTP_STATUS.getKey(), 200)
+          .withTag(Tags.HTTP_URL.getKey(), "http://www.example.com/foo/bar?q=bar")
+          .start();
+      span.log(logs);
+      span.finish();
       try {
         TimeUnit.MILLISECONDS.sleep(delay);
       } catch (InterruptedException e) {
