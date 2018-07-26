@@ -19,7 +19,7 @@ public abstract class UntilNoChangeCounter implements SpanCounter {
       long start = System.currentTimeMillis();
       int spansCount = count();
       long end = System.currentTimeMillis() - start;
-      logger.info("Count took: {}, {} number of spans returned", end, spansCount);
+      logger.info("Count took: {}s, {} number of spans returned", TimeUnit.MILLISECONDS.toSeconds(end), spansCount);
       return expected <= spansCount;
     });
     return count();

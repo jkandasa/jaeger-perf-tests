@@ -13,11 +13,13 @@ Collector: `--collector.queue-size=300000`
 
 ## Run tests
 
-Create 300.000 spans
+Create 300k spans
 
 ```bash
-SPAN_STORAGE_TYPE=jaeger-query ITERATIONS=3000 THREAD_COUNT=100 mvn clean package exec:java
+QUERY_FROM=jaeger-query ITERATIONS=3000 THREAD_COUNT=100 mvn clean package exec:java
 ```
+
+* `QUERY_FROM` can be set to `jaeger-query`, `elasticsearch`, `cassandra`
 
 ### Remove spans from Cassandra
 ```bash
@@ -26,12 +28,6 @@ echo "truncate jaeger_v1_test.traces;" | ccm node1 cqlsh
 
 After the deletion verify that number of stored spans is zero.
 
-### Get a count of spans in Cassandra
-```bash
-mvn clean TODO
-```
-
-or 
 
 ```bash
 echo "SELECT COUNT(*) FROM jaeger_v1_test.traces;" | ccm node1 cqlsh

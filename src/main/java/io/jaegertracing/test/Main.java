@@ -28,7 +28,8 @@ public class Main {
   private static final Integer THREAD_COUNT = new Integer(envs.getOrDefault("THREAD_COUNT", "10"));
   private static final Integer DELAY = new Integer(envs.getOrDefault("DELAY", "0"));
 
-  private static final String STORAGE = envs.getOrDefault("SPAN_STORAGE_TYPE", "elasticsearch");
+  private static final String STORAGE = envs.getOrDefault("QUERY_FROM", "jaeger-query");
+
   private static final String CASSANDRA_CLUSTER_IP = envs.getOrDefault("CASSANDRA_CLUSTER_IP", "localhost");
   private static final String CASSANDRA_KEYSPACE_NAME = envs.getOrDefault("CASSANDRA_KEYSPACE_NAME", "jaeger_v1_test");
   private static final String ELASTIC_HOSTNAME = envs.getOrDefault("ELASTIC_HOSTNAME", "localhost");
@@ -86,7 +87,8 @@ public class Main {
     startTime = System.currentTimeMillis();
     int spansCount = spanCounter.countUntilNoChange(expectedSpansCount);
     duration = System.currentTimeMillis() - startTime;
-    logger.info("Expected number of spans {}, actual {} stored in {} ms", expectedSpansCount, spansCount, duration);
+    logger.info("Expected number of spans {}, actual {} stored in {}s", expectedSpansCount, spansCount,
+        TimeUnit.MILLISECONDS.toSeconds(duration));
     spanCounter.close();
   }
 

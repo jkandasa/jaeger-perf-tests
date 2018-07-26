@@ -20,7 +20,7 @@ public class JaegerQuerySpanCounter extends UntilNoChangeCounter {
 
   public JaegerQuerySpanCounter(String queryUrl, String service, long limit) {
     this.okClient = new OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.MINUTES)
         .build();
     this.request = new Request.Builder()
         .url(String.format("%s/api/traces?service=%s&limit=%d", queryUrl, service, limit)).build();
