@@ -16,7 +16,7 @@ Collector: `--collector.queue-size=300000`
 Create 300.000 spans
 
 ```bash
-THREAD_COUNT=100 ITERATIONS=3000 mvn exec:java
+SPAN_STORAGE_TYPE=jaeger-query ITERATIONS=3000 THREAD_COUNT=100 mvn clean package exec:java
 ```
 
 ### Remove spans from Cassandra

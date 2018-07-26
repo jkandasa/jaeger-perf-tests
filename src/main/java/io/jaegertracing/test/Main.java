@@ -24,8 +24,8 @@ public class Main {
   private static final Map<String, String> envs = System.getenv();
 
   private static final String SENDER = envs.getOrDefault("SENDER", "http");
-  private static final Integer ITERATIONS = new Integer(envs.getOrDefault("ITERATIONS", "3000"));
-  private static final Integer THREAD_COUNT = new Integer(envs.getOrDefault("THREAD_COUNT", "100"));
+  private static final Integer ITERATIONS = new Integer(envs.getOrDefault("ITERATIONS", "10"));
+  private static final Integer THREAD_COUNT = new Integer(envs.getOrDefault("THREAD_COUNT", "10"));
   private static final Integer DELAY = new Integer(envs.getOrDefault("DELAY", "0"));
 
   private static final String STORAGE = envs.getOrDefault("SPAN_STORAGE_TYPE", "elasticsearch");
@@ -45,11 +45,13 @@ public class Main {
   private final int expectedSpansCount;
   private final SpanCounter spanCounter;
 
+  final String serviceName = "perf";
+
   Main() {
     if ("elasticsearch".equals(STORAGE)) {
       spanCounter = new ElasticsearchSpanCounter(ELASTIC_HOSTNAME, 9200);
     } else if ("jaeger-query".equals(STORAGE)) {
-      spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, "PerfTest", THREAD_COUNT*ITERATIONS);
+    spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, serviceName, THREAD_COUNT*ITERATIONS);
     } else {
       spanCounter = new CassandraSpanCounter(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME);
     }
@@ -66,9 +68,9 @@ public class Main {
     long startTime = System.currentTimeMillis();
     ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
     List<Future<?>> futures = new ArrayList<>(THREAD_COUNT);
-    JaegerTracer tracer = createJaegerTracer("PerfTest");
     for (int i = 0; i < THREAD_COUNT; i++) {
       String name = "Thread " + i;
+      JaegerTracer tracer = createJaegerTracer(serviceName);
       Runnable worker = new CreateSpansRunnable(tracer, name, ITERATIONS, DELAY, true);
       futures.add(executor.submit(worker));
     }

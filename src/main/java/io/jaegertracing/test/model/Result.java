@@ -8,13 +8,13 @@ import java.util.List;
  */
 public class Result {
 
-  private List<Span> data;
+  private List<Data> data;
 
-  public List<Span> getData() {
+  public List<Data> getData() {
     return data;
   }
 
-  public void setData(List<Span> data) {
+  public void setData(List<Data> data) {
     this.data = data;
   }
 }
