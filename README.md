@@ -16,10 +16,15 @@ Collector: `--collector.queue-size=300000`
 Create 300k spans
 
 ```bash
-QUERY_FROM=jaeger-query ITERATIONS=3000 THREAD_COUNT=100 mvn clean package exec:java
+QUERY_FROM=jaeger-query NUMBER_OF_SPANS=3000 NUM_OF_TRACERS=100 mvn clean package exec:java
 ```
 
-* `QUERY_FROM` can be set to `jaeger-query`, `elasticsearch`, `cassandra`
+* `QUERY_FROM` - can be set to `jaeger-query`, `elasticsearch`, `cassandra`.
+* `NUMBER_OF_SPANS` - number of spans reported per tracer.
+* `NUM_OF_TRACERS` - number of tracers used. This property simulates number
+ if services reporting tracing data. Each tracer creates and reports `NUMBER_OF_SPANS` in a separate thread.
+* `JAEGER_QUERY_ASYNC` - query requests from `jaeger-query` asynchronously for each tracer.
+ Applies only for when `QUERY_FROM=jaeger-query`.
 
 ### Remove spans from Cassandra
 ```bash

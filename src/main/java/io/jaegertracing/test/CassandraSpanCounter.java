@@ -3,7 +3,6 @@ package io.jaegertracing.test;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,7 @@ public class CassandraSpanCounter extends UntilNoChangeCounter {
     return cluster.connect(keyspace);
   }
 
+  @Override
   public int count() {
     ResultSet result = session.execute("select * from traces");
     int spansCount = result.all().size();
@@ -34,7 +34,7 @@ public class CassandraSpanCounter extends UntilNoChangeCounter {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     session.close();
   }
 }

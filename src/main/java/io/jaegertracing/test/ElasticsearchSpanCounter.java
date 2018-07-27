@@ -48,6 +48,7 @@ public class ElasticsearchSpanCounter extends UntilNoChangeCounter {
     }
   }
 
+  @Override
   public int count() {
     refreshSpanIndex();
     try {

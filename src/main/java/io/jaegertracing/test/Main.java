@@ -7,8 +7,10 @@ import io.jaegertracing.spi.Sender;
 import io.jaegertracing.thrift.internal.senders.HttpSender;
 import io.jaegertracing.thrift.internal.senders.UdpSender;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,8 +26,8 @@ public class Main {
   private static final Map<String, String> envs = System.getenv();
 
   private static final String SENDER = envs.getOrDefault("SENDER", "http");
-  private static final Integer ITERATIONS = new Integer(envs.getOrDefault("ITERATIONS", "10"));
-  private static final Integer THREAD_COUNT = new Integer(envs.getOrDefault("THREAD_COUNT", "10"));
+  private static final Integer NUMBER_OF_SPANS = new Integer(envs.getOrDefault("NUMBER_OF_SPANS", "10"));
+  private static final Integer NUM_OF_TRACERS = new Integer(envs.getOrDefault("NUM_OF_TRACERS", "10"));
   private static final Integer DELAY = new Integer(envs.getOrDefault("DELAY", "0"));
 
   private static final String STORAGE = envs.getOrDefault("QUERY_FROM", "jaeger-query");
@@ -35,6 +37,7 @@ public class Main {
   private static final String ELASTIC_HOSTNAME = envs.getOrDefault("ELASTIC_HOSTNAME", "localhost");
 
   private static final String JAEGER_QUERY_URL = envs.getOrDefault("JAEGER_QUERY_URL", "http://localhost:16686");
+  private static final String JAEGER_QUERY_ASYNC = envs.getOrDefault("JAEGER_QUERY_ASYNC", "false");
 
   private static final String JAEGER_COLLECTOR_HOST = envs.getOrDefault("JAEGER_COLLECTOR_HOST", "localhost");
   private static final String JAEGER_COLLECTOR_PORT = envs.getOrDefault("JAEGER_COLLECTOR_PORT", "14268");
@@ -44,19 +47,11 @@ public class Main {
   private static final Integer JAEGER_MAX_PACKET_SIZE = new Integer(envs.getOrDefault("JAEGER_MAX_PACKET_SIZE", "0"));
 
   private final int expectedSpansCount;
-  private final SpanCounter spanCounter;
 
-  final String serviceName = "perf";
+  private final String serviceName = "perf-test";
 
   Main() {
-    if ("elasticsearch".equals(STORAGE)) {
-      spanCounter = new ElasticsearchSpanCounter(ELASTIC_HOSTNAME, 9200);
-    } else if ("jaeger-query".equals(STORAGE)) {
-    spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, serviceName, THREAD_COUNT*ITERATIONS);
-    } else {
-      spanCounter = new CassandraSpanCounter(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME);
-    }
-    expectedSpansCount = ITERATIONS * THREAD_COUNT;
+    expectedSpansCount = NUMBER_OF_SPANS * NUM_OF_TRACERS;
   }
 
   public static void main(String []args) throws Exception {
@@ -64,15 +59,17 @@ public class Main {
   }
 
   public void createSpansTest() throws Exception {
-    logger.info("Starting with " + THREAD_COUNT + " threads for " + ITERATIONS + " iterations with a delay of " + DELAY);
+    logger.info("Starting with " + NUM_OF_TRACERS + " threads for " + NUMBER_OF_SPANS + " iterations with a delay of " + DELAY);
 
     long startTime = System.currentTimeMillis();
-    ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
-    List<Future<?>> futures = new ArrayList<>(THREAD_COUNT);
-    for (int i = 0; i < THREAD_COUNT; i++) {
-      String name = "Thread " + i;
-      JaegerTracer tracer = createJaegerTracer(serviceName);
-      Runnable worker = new CreateSpansRunnable(tracer, name, ITERATIONS, DELAY, true);
+    ExecutorService executor = Executors.newFixedThreadPool(NUM_OF_TRACERS);
+    List<Future<?>> futures = new ArrayList<>(NUM_OF_TRACERS);
+    Set<String> serviceNames = new LinkedHashSet<>();
+    for (int i = 0; i < NUM_OF_TRACERS; i++) {
+      String name = "thread-" + i;
+      JaegerTracer tracer = createJaegerTracer(serviceName + "-" + name);
+      serviceNames.add(tracer.getServiceName());
+      Runnable worker = new CreateSpansRunnable(tracer, name, NUMBER_OF_SPANS, DELAY, true);
       futures.add(executor.submit(worker));
     }
     for (Future<?> future: futures) {
@@ -83,7 +80,8 @@ public class Main {
 
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    logger.info("Finished all " + THREAD_COUNT + " threads; Created " + expectedSpansCount + " spans" + " in " + duration/1000 + " seconds") ;
+    logger.info("Finished all " + NUM_OF_TRACERS + " threads; Created " + expectedSpansCount + " spans" + " in " + duration/1000 + " seconds") ;
+    SpanCounter spanCounter = getSpanCounter(serviceNames);
     startTime = System.currentTimeMillis();
     int spansCount = spanCounter.countUntilNoChange(expectedSpansCount);
     duration = System.currentTimeMillis() - startTime;
@@ -115,5 +113,18 @@ public class Main {
         .withReporter(reporter)
         .withSampler(new ConstSampler(true))
         .build();
+  }
+
+  private static SpanCounter getSpanCounter(Set<String> serviceNames) {
+    SpanCounter spanCounter;
+    if ("elasticsearch".equals(STORAGE)) {
+      spanCounter = new ElasticsearchSpanCounter(ELASTIC_HOSTNAME, 9200);
+    } else if ("jaeger-query".equals(STORAGE)) {
+      boolean async = "true".equals(JAEGER_QUERY_ASYNC);
+      spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, NUM_OF_TRACERS * NUMBER_OF_SPANS, serviceNames, async);
+    } else {
+      spanCounter = new CassandraSpanCounter(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME);
+    }
+    return spanCounter;
   }
 }
