@@ -87,7 +87,11 @@ public class Main {
     duration = System.currentTimeMillis() - startTime;
     logger.info("Expected number of spans {}, actual {} stored in {}s", expectedSpansCount, spansCount,
         TimeUnit.MILLISECONDS.toSeconds(duration));
+    ElasticsearchStatsGetter esStatsGetter = new ElasticsearchStatsGetter(
+        ELASTIC_HOSTNAME, 9200);
+    System.out.println(esStatsGetter.getStats());
     spanCounter.close();
+    esStatsGetter.close();
   }
 
   public JaegerTracer createJaegerTracer(String serviceName) {

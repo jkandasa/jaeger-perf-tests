@@ -19,21 +19,14 @@ import org.slf4j.LoggerFactory;
 public class ElasticsearchSpanCounter extends UntilNoChangeCounter {
   private static final Logger log = LoggerFactory.getLogger(ElasticsearchSpanCounter.class);
 
-  private final String host;
-  private final int port;
   private final String spanIndex;
-
   private final RestClient restClient;
   private final ObjectMapper objectMapper;
 
   public ElasticsearchSpanCounter(String host, int port) {
-    this.host = host;
-    this.port = port;
-    this.restClient = getESRestClient();
+    this.restClient = getESRestClient(host, port);
     this.objectMapper = new ObjectMapper();
-    String formattedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    this.spanIndex = "jaeger-span-" + formattedDate;
-    log.info("Using ElasticSearch index : [" + spanIndex + "]" );
+    this.spanIndex = getSpanIndex();
   }
 
   public void refreshSpanIndex() {
@@ -65,10 +58,17 @@ public class ElasticsearchSpanCounter extends UntilNoChangeCounter {
     }
   }
 
-  private RestClient getESRestClient() {
+  static RestClient getESRestClient(String host, int port) {
     return RestClient.builder(
         new HttpHost(host, port, "http"))
         .build();
+  }
+
+  static String getSpanIndex() {
+    String formattedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    String spanIndex = "jaeger-span-" + formattedDate;
+    log.info("Using ElasticSearch index : [" + spanIndex + "]" );
+    return spanIndex;
   }
 
   public void close() throws IOException {

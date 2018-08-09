@@ -45,7 +45,7 @@ public class CreateSpansRunnable implements Runnable {
           .withTag(Tags.HTTP_STATUS.getKey(), 200)
           .withTag(Tags.HTTP_URL.getKey(), "http://www.example.com/foo/bar?q=bar")
           .start();
-      uniqueSpanTagger.setTag(span);
+//      uniqueSpanTagger.setTag(span);
       span.log(logs);
       span.finish();
       try {
