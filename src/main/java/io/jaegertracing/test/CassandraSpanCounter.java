@@ -1,5 +1,6 @@
 package io.jaegertracing.test;
 
+import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
@@ -14,7 +15,8 @@ public class CassandraSpanCounter extends UntilNoChangeCounter {
 
   private final Session session;
 
-  public CassandraSpanCounter(String contactPoint, String keyspace) {
+  public CassandraSpanCounter(String contactPoint, String keyspace, MetricRegistry metricRegistry) {
+    super(metricRegistry);
     this.session = getCassandraSession(contactPoint, keyspace);
   }
 

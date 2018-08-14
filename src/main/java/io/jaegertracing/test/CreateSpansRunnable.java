@@ -38,7 +38,7 @@ public class CreateSpansRunnable implements Runnable {
     logs.put("class", this.getClass().getName());
     for (int i = 0; i < count; i++) {
       // emulate client spans
-      Span span = tracer.buildSpan(String.format("thread: %s, iteration: %d", name, i))
+      Span span = tracer.buildSpan(name)
           .withTag(Tags.COMPONENT.getKey(), "perf-test")
           .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
           .withTag(Tags.HTTP_METHOD.getKey(), "get")

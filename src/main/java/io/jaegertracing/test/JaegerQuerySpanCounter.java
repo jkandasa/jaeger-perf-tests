@@ -1,5 +1,7 @@
 package io.jaegertracing.test;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jaegertracing.test.model.Result;
@@ -11,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -26,14 +27,23 @@ public class JaegerQuerySpanCounter extends UntilNoChangeCounter {
   private Set<Request> requests = new LinkedHashSet<>();
   private boolean async;
 
-  public JaegerQuerySpanCounter(String queryUrl, long limit, Set<String> serviceNames, boolean async) {
+  public JaegerQuerySpanCounter(
+      String queryUrl,
+      long limit, Set<String> serviceNames,
+      boolean async,
+      MetricRegistry metricRegistry
+  ) {
+    super(metricRegistry);
+    Timer jaegerQueryTimer = super.metricRegistry.timer("jaeger-query");
+
     this.okClient = new OkHttpClient.Builder()
         .readTimeout(10, TimeUnit.MINUTES)
         .addInterceptor(chain -> {
           long start = System.currentTimeMillis();
           Response response = chain.proceed(chain.request());
-          long end = System.currentTimeMillis() - start;
-          System.out.printf("%s --> in %ds\n", response, TimeUnit.MILLISECONDS.toSeconds(end));
+          long duration = System.currentTimeMillis() - start;
+          jaegerQueryTimer.update(duration, TimeUnit.MILLISECONDS);
+          System.out.printf("%s --> in %ds\n", response, TimeUnit.MILLISECONDS.toSeconds(duration));
           return response;
         })
         .build();

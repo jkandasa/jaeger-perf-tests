@@ -1,6 +1,7 @@
 package io.jaegertracing.test;
 
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -23,7 +24,8 @@ public class ElasticsearchSpanCounter extends UntilNoChangeCounter {
   private final RestClient restClient;
   private final ObjectMapper objectMapper;
 
-  public ElasticsearchSpanCounter(String host, int port) {
+  public ElasticsearchSpanCounter(String host, int port, MetricRegistry metricRegistry) {
+    super(metricRegistry);
     this.restClient = getESRestClient(host, port);
     this.objectMapper = new ObjectMapper();
     this.spanIndex = getSpanIndex();

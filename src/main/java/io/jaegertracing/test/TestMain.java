@@ -25,11 +25,11 @@ public class TestMain {
     Span span = tracer.buildSpan("foo")
         .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
         // java client does not support repeated keys!
-        .withTag("a.b", "true")
+        .withTag("a", "foo")
+        .withTag("a.a", "true")
         .withTag("a.b", true)
-        .withTag("a.b", 1)
-        .withTag("a.c", 2)
-        .withTag("a.b.c", "foo")
+        .withTag("a.c", 1)
+        .withTag("a.a.a", "foo")
         .start();
 
     HashMap<String, Object> logs = new HashMap<>();
@@ -39,5 +39,4 @@ public class TestMain {
 
     tracer.close();
   }
-
 }
