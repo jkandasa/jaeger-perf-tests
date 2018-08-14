@@ -11,9 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import jnr.x86asm.HINT;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.Response;
 
@@ -40,8 +38,6 @@ public class JaegerQuery implements Closeable {
     this.objectMapper = new ObjectMapper();
     this.objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-    Timer jaegerQueryTimer = metricRegistry.timer("jaeger-query-");
-
     this.okClient = new OkHttpClient.Builder()
         .readTimeout(10, TimeUnit.MINUTES)
         .build();
@@ -61,7 +57,6 @@ public class JaegerQuery implements Closeable {
       urls.add(String.format(urlServiceLimitTags, queryUrl, service, DEFAULT_LIMIT, tagsQueryString));
       urls.add(String.format(urlServiceLimitTags, queryUrl, service, highLimit, tagsQueryString));
     }
-
     timersMap = createTimers(urls);
   }
 
@@ -72,11 +67,11 @@ public class JaegerQuery implements Closeable {
   }
 
   public void executeQueries() {
-    for (Map.Entry<String, Timer> entry: timersMap.entrySet()) {
+    for (Map.Entry<String, Timer> urlTimer: timersMap.entrySet()) {
       try {
         long start = System.currentTimeMillis();
         Response response = okClient.newCall(new Builder()
-            .url(entry.getKey())
+            .url(urlTimer.getKey())
             .build())
             .execute();
 
@@ -85,7 +80,9 @@ public class JaegerQuery implements Closeable {
         }
 
         response.body().string();
-        entry.getValue().update(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        long duration = System.currentTimeMillis() - start;
+        urlTimer.getValue().update(duration, TimeUnit.MILLISECONDS);
+        System.out.printf("%s ---> %dms\n", urlTimer.getKey(), duration);
         response.close();
       } catch (IOException e) {
         e.printStackTrace();

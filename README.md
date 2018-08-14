@@ -25,6 +25,7 @@ QUERY_FROM=jaeger-query NUMBER_OF_SPANS=3000 NUM_OF_TRACERS=100 mvn clean packag
  if services reporting tracing data. Each tracer creates and reports `NUMBER_OF_SPANS` in a separate thread.
 * `JAEGER_QUERY_ASYNC` - query `jaeger-query` asynchronously for each tracer.
  Applies only for when `QUERY_FROM=jaeger-query`.
+* `JAEGER_QUERY_LIMIT` - `limit` parameter used to query `jaeger-query`. Defaults to 20000.
 
 ### Remove spans from Cassandra
 ```bash

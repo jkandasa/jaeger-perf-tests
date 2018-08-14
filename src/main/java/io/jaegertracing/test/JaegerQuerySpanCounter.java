@@ -34,7 +34,7 @@ public class JaegerQuerySpanCounter extends UntilNoChangeCounter {
       MetricRegistry metricRegistry
   ) {
     super(metricRegistry);
-    Timer jaegerQueryTimer = super.metricRegistry.timer("jaeger-query");
+    Timer jaegerQueryTimer = super.metricRegistry.timer("jaeger-query-span-counter");
 
     this.okClient = new OkHttpClient.Builder()
         .readTimeout(10, TimeUnit.MINUTES)

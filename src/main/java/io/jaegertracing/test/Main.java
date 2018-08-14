@@ -10,14 +10,12 @@ import io.jaegertracing.spi.Sender;
 import io.jaegertracing.thrift.internal.senders.HttpSender;
 import io.jaegertracing.thrift.internal.senders.UdpSender;
 import io.opentracing.tag.Tags;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,8 +42,9 @@ public class Main {
   private static final String CASSANDRA_KEYSPACE_NAME = envs.getOrDefault("CASSANDRA_KEYSPACE_NAME", "jaeger_v1_test");
   private static final String ELASTIC_HOSTNAME = envs.getOrDefault("ELASTIC_HOSTNAME", "localhost");
 
-  private static final String JAEGER_QUERY_URL = envs.getOrDefault("JAEGER_QUERY_URL", "http://localhost:16686");
-  private static final String JAEGER_QUERY_ASYNC = envs.getOrDefault("JAEGER_QUERY_ASYNC", "true");
+  static final String JAEGER_QUERY_URL = envs.getOrDefault("JAEGER_QUERY_URL", "http://localhost:16686");
+  private static final Boolean JAEGER_QUERY_ASYNC = Boolean.parseBoolean(envs.getOrDefault("JAEGER_QUERY_ASYNC", "true"));
+  static final Integer JAEGER_QUERY_LIMIT = Integer.parseInt(envs.getOrDefault("JAEGER_QUERY_LIMIT", "20000"));
 
   private static final String JAEGER_COLLECTOR_HOST = envs.getOrDefault("JAEGER_COLLECTOR_HOST", "localhost");
   private static final String JAEGER_COLLECTOR_PORT = envs.getOrDefault("JAEGER_COLLECTOR_PORT", "14268");
@@ -56,7 +55,7 @@ public class Main {
 
   private final int expectedSpansCount;
 
-  private final String serviceName = "perf-test";
+  static final String SERVICE_NAME = "perf-test";
 
   Main() {
     expectedSpansCount = NUMBER_OF_SPANS * NUM_OF_TRACERS;
@@ -70,11 +69,8 @@ public class Main {
     logger.info("Starting with " + NUM_OF_TRACERS + " threads for " + NUMBER_OF_SPANS + " iterations with a delay of " + DELAY);
 
     MetricRegistry metricsRegistry = new MetricRegistry();
-    ConsoleReporter reporter = ConsoleReporter.forRegistry(metricsRegistry)
-        .convertRatesTo(TimeUnit.SECONDS)
-        .convertDurationsTo(TimeUnit.MILLISECONDS)
-        .build();
-    reporter.start(20, TimeUnit.HOURS);
+    ConsoleReporter reporter = createConsoleReporter(metricsRegistry);
+
     Timer reportingTimer = metricsRegistry.timer("report-spans");
     long startTime = System.currentTimeMillis();
     ExecutorService executor = Executors.newFixedThreadPool(NUM_OF_TRACERS);
@@ -82,7 +78,7 @@ public class Main {
     Set<String> serviceNames = new LinkedHashSet<>();
     for (int i = 0; i < NUM_OF_TRACERS; i++) {
       String name = "thread-" + i;
-      JaegerTracer tracer = createJaegerTracer(serviceName + "-" + name);
+      JaegerTracer tracer = createJaegerTracer(SERVICE_NAME + "-" + name);
       serviceNames.add(tracer.getServiceName());
       Runnable worker = new CreateSpansRunnable(tracer, name, NUMBER_OF_SPANS, DELAY, true);
       futures.add(executor.submit(worker));
@@ -105,7 +101,7 @@ public class Main {
         TimeUnit.MILLISECONDS.toSeconds(duration));
 
     JaegerQuery jaegerQuery = new JaegerQuery(JAEGER_QUERY_URL, metricsRegistry,
-        new ArrayList<>(serviceNames).get(0), "thread-0", 1000,
+        new ArrayList<>(serviceNames).get(0), "thread-0", JAEGER_QUERY_LIMIT,
         Arrays.asList(getNonseseTags(), getTags()));
     jaegerQuery.executeQueries(20);
 
@@ -144,20 +140,28 @@ public class Main {
         .build();
   }
 
+  static ConsoleReporter createConsoleReporter(MetricRegistry metricRegistry) {
+    ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry)
+        .convertRatesTo(TimeUnit.SECONDS)
+        .convertDurationsTo(TimeUnit.MILLISECONDS)
+        .build();
+    reporter.start(20, TimeUnit.HOURS);
+    return reporter;
+  }
+
   private static SpanCounter getSpanCounter(Set<String> serviceNames, MetricRegistry metricRegistry) {
     SpanCounter spanCounter;
     if ("elasticsearch".equals(STORAGE)) {
       spanCounter = new ElasticsearchSpanCounter(ELASTIC_HOSTNAME, 9200, metricRegistry);
     } else if ("jaeger-query".equals(STORAGE)) {
-      boolean async = "true".equals(JAEGER_QUERY_ASYNC);
-      spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, NUM_OF_TRACERS * NUMBER_OF_SPANS, serviceNames, async, metricRegistry);
+      spanCounter = new JaegerQuerySpanCounter(JAEGER_QUERY_URL, NUM_OF_TRACERS * NUMBER_OF_SPANS, serviceNames, JAEGER_QUERY_ASYNC, metricRegistry);
     } else {
       spanCounter = new CassandraSpanCounter(CASSANDRA_CLUSTER_IP, CASSANDRA_KEYSPACE_NAME, metricRegistry);
     }
     return spanCounter;
   }
 
-  private Map<String, String> getNonseseTags() {
+  static Map<String, String> getNonseseTags() {
     Map<String, String> tags = new HashMap<>();
     tags.put("fooo.bar1", "fobarhax*+??");
     tags.put("fooo.ba2sar", "true");
@@ -169,7 +173,7 @@ public class Main {
     return tags;
   }
 
-  private Map<String, String> getTags() {
+  static Map<String, String> getTags() {
     Map<String, String> tags = new HashMap<>();
     tags.put(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
     tags.put(Tags.HTTP_METHOD.getKey(), "get");

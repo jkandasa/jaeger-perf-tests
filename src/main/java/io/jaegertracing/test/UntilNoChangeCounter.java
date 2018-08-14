@@ -21,8 +21,8 @@ public abstract class UntilNoChangeCounter implements SpanCounter {
 
   public UntilNoChangeCounter(MetricRegistry metricRegistry) {
     this.metricRegistry = metricRegistry;
-    this.queryTimer = metricRegistry.timer("query-single");
-    this.queryUntilNoChangeTimer = metricRegistry.timer("query-until-no-change");
+    this.queryTimer = metricRegistry.timer("until-no-change-single-span-counter");
+    this.queryUntilNoChangeTimer = metricRegistry.timer("until-no-change-span-counter");
   }
 
   @Override
@@ -33,7 +33,7 @@ public abstract class UntilNoChangeCounter implements SpanCounter {
       long start = System.currentTimeMillis();
       int spansCount = count();
       long duration = System.currentTimeMillis() - start;
-      queryTimer.update(duration, TimeUnit.MICROSECONDS);
+      queryTimer.update(duration, TimeUnit.MILLISECONDS);
       logger.info("Count took: {}s, {} number of spans returned", TimeUnit.MILLISECONDS.toSeconds(duration), spansCount);
       return expected <= spansCount;
     });
