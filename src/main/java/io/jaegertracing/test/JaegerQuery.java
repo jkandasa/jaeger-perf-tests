@@ -45,6 +45,7 @@ public class JaegerQuery implements Closeable {
     String urlServiceLimit =          "%s/api/traces?service=%s&limit=%d&lookback=1h";
     String urlServiceLimitTags =      "%s/api/traces?service=%s&limit=%d&lookback=1h&tags=%s";
     String urlServiceLimitOperation = "%s/api/traces?service=%s&limit=%d&lookback=1h&operation=%s";
+    String urlServiceLimitOperationTags = "%s/api/traces?service=%s&limit=%d&lookback=1h&operation=%s&tags=%s";
 
     List<String> urls = new ArrayList<>();
     urls.add(String.format(urlServiceLimit, queryUrl, service, DEFAULT_LIMIT));
@@ -56,6 +57,7 @@ public class JaegerQuery implements Closeable {
       String tagsQueryString = getTagsQueryString(map);
       urls.add(String.format(urlServiceLimitTags, queryUrl, service, DEFAULT_LIMIT, tagsQueryString));
       urls.add(String.format(urlServiceLimitTags, queryUrl, service, highLimit, tagsQueryString));
+      urls.add(String.format(urlServiceLimitOperationTags, queryUrl, service, highLimit, operation, tagsQueryString));
     }
     timersMap = createTimers(urls);
   }

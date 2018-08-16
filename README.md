@@ -16,7 +16,7 @@ Collector: `--collector.queue-size=300000`
 Create 300k spans
 
 ```bash
-QUERY_FROM=jaeger-query NUMBER_OF_SPANS=3000 NUM_OF_TRACERS=100 mvn clean package exec:java
+QUERY_FROM=jaeger-query NUMBER_OF_SPANS=3000 NUM_OF_TRACERS=100 JAEGER_QUERY_LIMIT=10000 mvn clean package exec:java
 ```
 
 * `QUERY_FROM` - can be set to `jaeger-query`, `elasticsearch`, `cassandra`.
@@ -26,6 +26,11 @@ QUERY_FROM=jaeger-query NUMBER_OF_SPANS=3000 NUM_OF_TRACERS=100 mvn clean packag
 * `JAEGER_QUERY_ASYNC` - query `jaeger-query` asynchronously for each tracer.
  Applies only for when `QUERY_FROM=jaeger-query`.
 * `JAEGER_QUERY_LIMIT` - `limit` parameter used to query `jaeger-query`. Defaults to 20000.
+
+## Query tests
+```bash
+QUERY_FROM=jaeger-query JAEGER_QUERY_LIMIT=20000 mvn clean package -Pquery exec:java
+```
 
 ### Remove spans from Cassandra
 ```bash
@@ -44,9 +49,9 @@ echo "SELECT COUNT(*) FROM jaeger_v1_test.traces;" | ccm node1 cqlsh
 eval $(minikube docker-env)
 mvn package -DskipTests=true  && docker build -t jaeger-perf-tests:latest .
 # cassandra
-kubectl run perf-tests --env STORAGE=cassandra --env CASSANDRA_CLUSTER_IP=cassandra --env CASSANDRA_KEYSPACE_NAME=jaeger_v1_dc1 --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
+kubectl run perf-tests --env QUERY_FROM=cassandra --env CASSANDRA_CLUSTER_IP=cassandra --env CASSANDRA_KEYSPACE_NAME=jaeger_v1_dc1 --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
 # elasticsearch
-kubectl run perf-tests --env ELASTIC_HOSTNAME=my-release-elasticsearch-client --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
+kubectl run perf-tests --env QUERY_FROM=elasticsearch --env ELASTIC_HOSTNAME=my-release-elasticsearch-client --env JAEGER_COLLECTOR_HOST=jaeger-collector --env JAEGER_COLLECTOR_PORT=14268 --image-pull-policy=IfNotPresent --restart=Never --image=jaeger-perf-tests:latest
 
 
 kubectl logs -f  po/perf-tests

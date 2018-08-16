@@ -107,7 +107,7 @@ public class Main {
 
     ElasticsearchStatsGetter esStatsGetter = new ElasticsearchStatsGetter(
         ELASTIC_HOSTNAME, 9200);
-    System.out.println(esStatsGetter.getStats());
+    esStatsGetter.printStats();
     reporter.report();
 
     spanCounter.close();
