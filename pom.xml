@@ -9,6 +9,7 @@
 
   <properties>
     <cassandra.driver.core.version>3.3.0</cassandra.driver.core.version>
+    <fabric8-maven-plugin.version>3.5.35</fabric8-maven-plugin.version>
     <elasticsearch.version>6.1.1</elasticsearch.version>
     <jaeger.version>0.30.2</jaeger.version>
     <junit.version>4.12</junit.version>
