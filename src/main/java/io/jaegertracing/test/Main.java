@@ -33,7 +33,7 @@ public class Main {
 
   private static final String SENDER = envs.getOrDefault("SENDER", "http");
   private static final Integer NUMBER_OF_SPANS = new Integer(envs.getOrDefault("NUMBER_OF_SPANS", "10"));
-  private static final Integer NUM_OF_TRACERS = new Integer(envs.getOrDefault("NUM_OF_TRACERS", "10"));
+  private static final Integer NUM_OF_TRACERS = new Integer(envs.getOrDefault("NUMBER_OF_TRACERS", "10"));
   private static final Integer DELAY = new Integer(envs.getOrDefault("DELAY", "0"));
 
   private static final String STORAGE = envs.getOrDefault("QUERY_FROM", "jaeger-query");
