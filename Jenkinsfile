@@ -36,7 +36,7 @@ pipeline {
         string(name: 'JAEGER_FLUSH_INTERVAL', defaultValue: '100', description: 'Jaeger flush interval')
         string(name: 'JAEGER_MAX_PACKET_SIZE', defaultValue: '0', description: 'Jaeger max pocket size')
 
-        
+        string(name: 'COLLECTOR_PODS', defaultValue: '1', description: 'The number of collector pods')
         string(name: 'COLLECTOR_QUEUE_SIZE', defaultValue: '2000', description: '--collector.queue-size')
         string(name: 'COLLECTOR_NUM_WORKERS', defaultValue: '50', description: '--collector.num-workers')
 
