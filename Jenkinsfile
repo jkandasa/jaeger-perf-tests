@@ -84,6 +84,7 @@ pipeline {
                 deleteDir()
                 checkout scm
                 sh 'ls -alF'
+                sh 'ls -alF scripts/'
             }
         }
         stage('deploy Cassandra') {
